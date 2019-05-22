@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="Gradle: com.bold360ai-sdk.conversation:engine:3.2.3@aar">
+    <ANNOTATIONS>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/dcf1d46878b76d4c51775e790cfc00b0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/dcf1d46878b76d4c51775e790cfc00b0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/dcf1d46878b76d4c51775e790cfc00b0/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.bold360ai-sdk.conversation/engine/3.2.3/2e4490da2fb9c0d862e5b2ce5f4ea06e941d3b34/engine-3.2.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

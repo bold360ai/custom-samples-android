@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.bold360ai-sdk.core:accessibility:3.2.2@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/7b48852fb1d32a5fdeb00da19c7c9aab/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/7b48852fb1d32a5fdeb00da19c7c9aab/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.bold360ai-sdk.core/accessibility/3.2.2/8492db16bb08a03770c90960e936fc93a7294769/accessibility-3.2.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

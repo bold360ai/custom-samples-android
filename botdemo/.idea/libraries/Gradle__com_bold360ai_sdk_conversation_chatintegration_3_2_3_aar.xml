@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="Gradle: com.bold360ai-sdk.conversation:chatintegration:3.2.3@aar">
+    <ANNOTATIONS>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/1242be47ab9913991e730fe5ce3edf85/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/1242be47ab9913991e730fe5ce3edf85/jars/libs/java_websocket.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/1242be47ab9913991e730fe5ce3edf85/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/1242be47ab9913991e730fe5ce3edf85/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.bold360ai-sdk.conversation/chatintegration/3.2.3/dd0d0d76c1a6bcfc05950775cd667d01fdc2b17a/chatintegration-3.2.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
