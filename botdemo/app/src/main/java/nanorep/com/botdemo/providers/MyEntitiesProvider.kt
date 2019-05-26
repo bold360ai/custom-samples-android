@@ -38,11 +38,18 @@ class MyEntitiesProvider : EntitiesProvider {
             "CREDIT_CARD" -> {
                 Entity(Entity.PERSISTENT, Entity.NUMBER, (random.nextInt(100 - 10) + 10).toString(), entityName, "1")
             }
-            "ACCOUNT" -> {
-                Entity(Entity.PERSISTENT, Entity.NUMBER, "123", entityName, "1").apply {
-                    addProperty(Property(Entity.TEXT, (random.nextInt(10000 - 1000) + 1000).toString(), "1").apply { name = "ID" })
-                    addProperty(Property(Entity.TEXT, "$", "2").apply { name = "CURRENCY" })
-                    addProperty(Property(Entity.TEXT, "PRIVATE", "2").apply { name = "TYPE" })
+            "USER_ACCOUNTS" -> {
+               Entity(Entity.PERSISTENT, Entity.NUMBER, "123", entityName, "1").apply {
+                    for (i in 0..2) {
+
+                        val property = Property(Entity.TEXT, i.toString() + "234", "ACCOUNT")
+                        property.name = property.value
+                        property.addProperty(Property(Entity.TEXT, "Some Value", "TYPE"))
+                        property.addProperty(Property(Entity.TEXT, "$", "Currency"))
+                        property.addProperty(Property(Entity.TEXT, "ID", i.toString() + "234"))
+
+                        addProperty(property)
+                    }
                 }
             }
             else -> null

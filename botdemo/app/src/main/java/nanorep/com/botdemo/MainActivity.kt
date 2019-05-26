@@ -36,12 +36,19 @@ import nanorep.com.botdemo.providers.MyAccountProvider
 import nanorep.com.botdemo.providers.MyEntitiesProvider
 import nanorep.com.botdemo.providers.MyHistoryProvider
 
-interface ChatFlowHandler : ChatEventListener {
-    fun waitingVisibility(visible: Boolean)
+
+/***
+ * This demo demonstrates how to implement a simple app using the latest Bold360 mobile SDK release.
+ * For farther information and documentation please follow the next link:https://developer.bold360.com/help/EN/Bold360API/Bold360API/c_sdk_combined_Android_header.html
+ */
+
+// An interface that is being used to control the view when the has been selected and created at the DemoMainFragment
+interface ChatHandler : ChatEventListener {
+    fun progressbarVisibility(visible: Boolean)
     fun onAccountReady(account: Account)
 }
 
-class MainActivity : AppCompatActivity(), ChatFlowHandler {
+class MainActivity : AppCompatActivity(), ChatHandler {
 
     private var chatController: ChatController? = null
 
@@ -63,6 +70,8 @@ class MainActivity : AppCompatActivity(), ChatFlowHandler {
             .commit()
     }
 
+    ///////////////////////////////////////////// Lifecycle and backPressed handling:
+
     override fun onStop() {
         if (isFinishing) {
             clearAllResources();
@@ -72,7 +81,7 @@ class MainActivity : AppCompatActivity(), ChatFlowHandler {
     }
 
     override fun onBackPressed() {
-        waitingVisibility(false)
+        progressbarVisibility(false)
         super.onBackPressed()
     }
 
@@ -92,17 +101,13 @@ class MainActivity : AppCompatActivity(), ChatFlowHandler {
         super.onDestroy()
     }
 
-    override fun waitingVisibility(visible: Boolean) {
-        progressBar.visibility = if (visible) View.VISIBLE else View.GONE
-    }
-
     override fun onAccountReady(account: Account) {
-        waitingVisibility(true)
+        progressbarVisibility(true)
 
         accountProvider.updateAccountInfo(account)
 
         // Register to the account's MissingEntities
-        (account as? BotAccount)?.entities = arrayOf("CREDIT_CARD", "ACCOUNT")
+        (account as? BotAccount)?.entities = arrayOf("CREDIT_CARD", "USER_ACCOUNTS", "ACCOUNT_OPTIONS")
 
         historyProvider.accountId = account.getApiKey() + (account as? BotAccount)?.contexts
 
@@ -157,7 +162,7 @@ class MainActivity : AppCompatActivity(), ChatFlowHandler {
                         openConversationFragment(result.fragment)
                     }
 
-                    waitingVisibility(false)
+                    progressbarVisibility(false)
                 }
             })
     }
@@ -195,6 +200,10 @@ class MainActivity : AppCompatActivity(), ChatFlowHandler {
             StateEvent.ChatWindowDetached -> {
             }
         }
+    }
+
+    override fun progressbarVisibility(visible: Boolean) {
+        progressBar.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     private fun openConversationFragment(fragment: Fragment) {

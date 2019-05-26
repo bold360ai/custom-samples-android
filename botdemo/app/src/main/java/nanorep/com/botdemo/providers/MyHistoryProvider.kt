@@ -21,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  * */
 internal class MyHistoryProvider : HistoryProvider {
 
+    // Indicates on how many elements to present at a single history load
     private val HistoryPageSize = 8;
 
     internal var accountId: String? = null
@@ -30,6 +31,7 @@ internal class MyHistoryProvider : HistoryProvider {
     private val chatHistory = ConcurrentHashMap<String, List<HistoryElement>>()
     private var hasHistory = false
 
+    // Fetching history elements
     override fun fetch(from: Int, @FetchDirection direction: Int, listener: HistoryListener?) {
 
         Thread(Runnable {
@@ -57,6 +59,7 @@ internal class MyHistoryProvider : HistoryProvider {
         }).start()
     }
 
+    // Stores elements in the history
     override fun store(item: StorableChatElement) {
        // if(item == null || item.getStatus() != StatusOk) return;
 
@@ -68,6 +71,7 @@ internal class MyHistoryProvider : HistoryProvider {
         }
     }
 
+    // Removes elements from the history
     override fun remove(timestampId: Long) {
         synchronized(historySync) {
             accountId?.run {
@@ -85,6 +89,7 @@ internal class MyHistoryProvider : HistoryProvider {
         }
     }
 
+    // Updates a specific history item by its timestamp
     override fun update(timestampId: Long, item: StorableChatElement) {
         synchronized(historySync) {
             accountId?.run {

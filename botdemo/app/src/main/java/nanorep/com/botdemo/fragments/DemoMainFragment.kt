@@ -9,14 +9,14 @@ import android.view.View
 import android.view.ViewGroup
 import com.nanorep.nanoengine.BotAccount
 import kotlinx.android.synthetic.main.fragment_main.*
-import nanorep.com.botdemo.ChatFlowHandler
+import nanorep.com.botdemo.ChatHandler
 import nanorep.com.botdemo.R
 
 internal const val DemoMainFragment_TAG = "DemoMainFragment"
 
 class DemoMainFragment : Fragment() {
 
-    private var chatFlowHandler: ChatFlowHandler? = null
+    private var chatHandler: ChatHandler? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View? {
         return inflater.inflate(R.layout.fragment_main, container, false)
@@ -31,7 +31,7 @@ class DemoMainFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        chatFlowHandler = (context as? ChatFlowHandler) ?: kotlin.run {
+        chatHandler = (context as? ChatHandler) ?: kotlin.run {
             Log.e(TAG, "$context must implement ChatFlowHandler")
             null
         }
@@ -39,7 +39,7 @@ class DemoMainFragment : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        chatFlowHandler = null
+        chatHandler = null
     }
 
     private fun onChatClick(view: View) {
@@ -58,7 +58,7 @@ class DemoMainFragment : Fragment() {
             }
 
             view.isEnabled = false
-            chatFlowHandler?.onAccountReady(this)
+            chatHandler?.onAccountReady(this)
         }
     }
 
