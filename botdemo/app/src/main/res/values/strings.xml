@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Boldai Demo</string>
 
-    <string name="api_key">API_KEY</string>
-    <string name="account">ACCOUNT_NAME</string>
-    <string name="knowledge_base">KNOWLEDGE_BASE</string>
-    <string name="domain">DOMAIN</string>
+    <string name="api_key">37a4b6ea-ba69-4644-a465-89e1bcc4e9d2</string>
+    <string name="account">ICICI</string>
+    <string name="knowledge_base">iMobile</string>
+    <string name="domain">qa07</string>
 
     <string name="back_to_the_bold_sdk">back to the bold SDK</string>
     <string name="in_app_fragment_text">This is an In-App Navigation Demo</string>

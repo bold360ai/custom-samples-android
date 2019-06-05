@@ -33,7 +33,7 @@ import static com.nanorep.sdkcore.model.StatementModels.StatusOk;
 import static com.nanorep.sdkcore.model.StatementModels.StatusPending;
 import static com.nanorep.sdkcore.utils.UtilityMethodsKt.runMain;
 
-class MyHandoverHandler extends HandoverHandler {
+public class MyHandoverHandler extends HandoverHandler {
 
     private static int responseNumber = 1;
 
@@ -41,8 +41,9 @@ class MyHandoverHandler extends HandoverHandler {
     private EventListener listener;
     private ChatDelegate chatDelegate;
     private Handler handler = new Handler();
+    ;
 
-    MyHandoverHandler(@NotNull Context context) {
+    public MyHandoverHandler(@NotNull Context context) {
         super(context);
     }
 

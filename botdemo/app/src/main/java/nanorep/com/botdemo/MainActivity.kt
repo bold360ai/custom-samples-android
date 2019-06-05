@@ -11,6 +11,8 @@ import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.integration.core.StateEvent
@@ -24,6 +26,7 @@ import com.nanorep.nanoengine.AccountInfo
 import com.nanorep.nanoengine.BotAccount
 import com.nanorep.nanoengine.model.configuration.ConversationSettings
 import com.nanorep.nanoengine.model.configuration.TimestampStyle
+import com.nanorep.sdkcore.model.StatementScope
 import com.nanorep.sdkcore.utils.NRError
 import com.nanorep.sdkcore.utils.snack
 import com.nanorep.sdkcore.utils.toast
@@ -32,6 +35,7 @@ import nanorep.com.botdemo.fragments.DemoMainFragment
 import nanorep.com.botdemo.fragments.DemoMainFragment_TAG
 import nanorep.com.botdemo.fragments.DummyInAppFragment
 import nanorep.com.botdemo.fragments.DummyInAppFragment_TAG
+import nanorep.com.botdemo.handlers.MyHandoverHandler
 import nanorep.com.botdemo.providers.MyAccountProvider
 import nanorep.com.botdemo.providers.MyEntitiesProvider
 import nanorep.com.botdemo.providers.MyHistoryProvider
@@ -52,10 +56,16 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
     private var chatController: ChatController? = null
 
-    // Providers to be passed to the chat controller
+    // Providers to be passed to the chatController
     private val accountProvider = MyAccountProvider()
     private var entitiesProvider = MyEntitiesProvider()
     private var historyProvider = MyHistoryProvider()
+    private var menu: Menu? = null
+
+
+    // Handlers to be passed to the chatController
+    private val myHandoverHandler = MyHandoverHandler(this)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,10 +74,10 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         setSupportActionBar(findViewById(R.id.toolbar))
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.content_main, DemoMainFragment.newInstance(),
-                DemoMainFragment_TAG
-            )
-            .commit()
+                .replace(R.id.content_main, DemoMainFragment.newInstance(),
+                        DemoMainFragment_TAG
+                )
+                .commit()
     }
 
     ///////////////////////////////////////////// Lifecycle and backPressed handling:
@@ -108,6 +118,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
         // Register to the account's MissingEntities
         (account as? BotAccount)?.entities = arrayOf("CREDIT_CARD", "USER_ACCOUNTS", "ACCOUNT_OPTIONS")
+        (account as? BotAccount)?.userId("123")
 
         historyProvider.accountId = account.getApiKey() + (account as? BotAccount)?.contexts
 
@@ -128,43 +139,46 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         if (isFinishing) return null
 
         val settings = ConversationSettings()
-            .disableFileUpload()
-            .speechEnable(true)
-            .enableMultiRequestsOnLiveAgent(true)
-            .timestampConfig(
-                true, TimestampStyle(
-                    "dd.MM hh:mm:ss",
-                    10, Color.parseColor("#33aa33"), null
+                .speechEnable(true)
+                .enableMultiRequestsOnLiveAgent(true)
+                .timestampConfig(
+                        true, TimestampStyle(
+                        "dd.MM hh:mm:ss",
+                        10, Color.parseColor("#33aa33"), null
                 )
-            )
-            .datestamp(true, FriendlyDatestampFormatFactory(this))
+                )
+                .datestamp(true, FriendlyDatestampFormatFactory(this))
 
         return ChatController.Builder(this).apply {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
+            chatHandoverHandler(myHandoverHandler);
             entitiesProvider(entitiesProvider)
             accountProvider.run { accountProvider(this) }
             historyProvider.run { historyProvider(this) }
         }
-            .build(account, object : ChatLoadedListener {
+                .build(account, object : ChatLoadedListener {
 
-                override fun onComplete(result: ChatLoadResponse) {
+                    override fun onComplete(result: ChatLoadResponse) {
 
-                    val error = result.error
-
-                    if (error != null) {
-                        onError(error)
-                        if (!(error.isConversationError() || error.isServerConnectionNotAvailable())) {
-                            openConversationFragment(result.fragment)
+                        val error = result.error ?: let {
+                            if (result.fragment == null) {
+                                NRError(NRError.EmptyError, "Chat UI failed to init")
+                            } else {
+                                null
+                            }
                         }
 
-                    } else {
-                        openConversationFragment(result.fragment)
-                    }
+                        if (error != null) {
+                            onError(error)
 
-                    progressbarVisibility(false)
-                }
-            })
+                        } else {
+                            openConversationFragment(result.fragment!!)
+                        }
+
+                        progressbarVisibility(false)
+                    }
+                })
     }
 
     /**
@@ -180,6 +194,9 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             }
 
             StateEvent.Started -> {
+                if (stateEvent.scope == StatementScope.HandoverScope) {
+                    menu?.findItem(R.id.end_chat)?.isVisible = true
+                }
             }
 
             StateEvent.InQueue -> {
@@ -194,7 +211,11 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             StateEvent.Unavailable -> {
             }
 
-            StateEvent.Ending, StateEvent.Ended -> {
+            StateEvent.Ending -> {
+            }
+
+            StateEvent.Ended -> {
+                menu?.findItem(R.id.end_chat)?.isVisible = false
             }
 
             StateEvent.ChatWindowDetached -> {
@@ -208,14 +229,14 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
     private fun openConversationFragment(fragment: Fragment) {
         if (isFinishing || supportFragmentManager.isStateSaved ||
-            supportFragmentManager.findFragmentByTag(CONVERSATION_FRAGMENT_TAG) != null) {
+                supportFragmentManager.findFragmentByTag(CONVERSATION_FRAGMENT_TAG) != null) {
             return
         }
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.content_main, fragment, CONVERSATION_FRAGMENT_TAG)
-            .addToBackStack(CONVERSATION_FRAGMENT_TAG)
-            .commit()
+                .replace(R.id.content_main, fragment, CONVERSATION_FRAGMENT_TAG)
+                .addToBackStack(CONVERSATION_FRAGMENT_TAG)
+                .commit()
     }
 
     private fun openInAppFragment() {
@@ -223,11 +244,11 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         hideKeyboard()
 
         supportFragmentManager.beginTransaction()
-            .add(R.id.content_main, DummyInAppFragment.newInstance(),
-                DummyInAppFragment_TAG
-            )
-            .addToBackStack(null)
-            .commit()
+                .add(R.id.content_main, DummyInAppFragment.newInstance(),
+                        DummyInAppFragment_TAG
+                )
+                .addToBackStack(null)
+                .commit()
     }
 
 /////////////////////////////////////////////////////// Error handling:
@@ -292,8 +313,8 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         try {
             supportFragmentManager.fragments.lastOrNull()?.view?.run {
                 snack(
-                    s + error.reason + ": " + error.description,
-                    4000, -1, Gravity.CENTER, intArrayOf(), i
+                        s + error.reason + ": " + error.description,
+                        4000, -1, Gravity.CENTER, intArrayOf(), i
                 )
             }
 
@@ -312,7 +333,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
                 openInAppFragment()
 
-            }  ?: run {
+            } ?: run {
                 val intent = Intent(Intent.ACTION_VIEW).setData(Uri.parse(url))
                 startActivity(intent)
             }
@@ -343,5 +364,29 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         (getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager)?.takeIf { currentFocus != null }?.run {
             hideSoftInputFromWindow(currentFocus.windowToken, 0)
         }
+    }
+
+///////////////////////////////////////////////////////
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = getMenuInflater()
+        inflater.inflate(R.menu.menu_main, menu)
+        this.menu = menu
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+
+            R.id.end_chat -> {
+                chatController?.endChat(false)
+                return false
+            }
+
+            else -> {
+            }
+        }
+
+        return false
     }
 }
