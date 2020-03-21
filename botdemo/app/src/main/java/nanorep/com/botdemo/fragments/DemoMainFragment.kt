@@ -25,28 +25,6 @@ import java.util.*
 
 internal const val DemoMainFragment_TAG = "DemoMainFragment"
 
-class Accent(val title: String, val locale: Locale){
-
-    companion object {
-
-        val DEFAULT = Accent("Default", Locale.US)
-
-        val accentsList = mutableListOf(
-            Accent("English India", Locale("en_IN")),
-            Accent("Hindi India", Locale("hi_IN")),
-            Accent("Bengali India", Locale("bn_IN")),
-            Accent("Gujarati India", Locale("gu_IN")),
-            Accent("Kannada India", Locale("kn_IN")),
-            Accent("Kashmiri India", Locale("ks_IN")),
-            Accent("Malayalam, India", Locale("ml_IN")),
-            Accent("Marathi, India", Locale("mr_IN")),
-            Accent("Oriya, India", Locale("or_IN")),
-            Accent("Tamil, India", Locale("ta_IN")),
-            Accent("Telugu, India", Locale("te_IN"))
-        )
-    }
-}
-
 class DemoMainFragment : Fragment() {
 
     private var chatHandler: ChatHandler? = null
@@ -177,6 +155,29 @@ class DemoMainFragment : Fragment() {
 
                 setPadding(10, 10, 0, 10)
             }
+        }
+    }
+
+
+    class Accent(val title: String, val locale: Locale){
+
+        companion object {
+
+            val DEFAULT = Accent("Default", Locale.US)
+
+            val accentsList = mutableListOf(
+                Accent("English India", Locale("en_IN")),
+                Accent("Hindi India", Locale("hi_IN")),
+                Accent("Bengali India", Locale("bn_IN")),
+                Accent("Gujarati India", Locale("gu_IN")),
+                Accent("Kannada India", Locale("kn_IN")),
+                Accent("Kashmiri India", Locale("ks_IN")),
+                Accent("Malayalam, India", Locale("ml_IN")),
+                Accent("Marathi, India", Locale("mr_IN")),
+                Accent("Oriya, India", Locale("or_IN")),
+                Accent("Tamil, India", Locale("ta_IN")),
+                Accent("Telugu, India", Locale("te_IN"))
+            )
         }
     }
 }
