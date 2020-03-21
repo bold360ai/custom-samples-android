@@ -3,9 +3,9 @@ package nanorep.com.botdemo.providers
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.nanorep.convesationui.structure.history.FetchDirection
-import com.nanorep.convesationui.structure.history.HistoryListener
-import com.nanorep.convesationui.structure.history.HistoryProvider
+import com.nanorep.convesationui.structure.history.ChatElementListener
+import com.nanorep.convesationui.structure.history.HistoryCallback
+import com.nanorep.convesationui.structure.history.HistoryFetching
 import com.nanorep.nanoengine.chatelement.ChatElement
 import com.nanorep.nanoengine.chatelement.StorableChatElement
 import com.nanorep.sdkcore.model.StatementScope
@@ -15,14 +15,11 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
-/**
- * In order to support history, the chat controller must get an history provider.
- * The next implantation is good for most cases.
- * */
-internal class MyHistoryProvider : HistoryProvider {
+const val HistoryPageSize = 8
+const val DEMO_FORM_TAG = "demo_form_fragment"
 
-    // Indicates on how many elements to present at a single history load
-    private val HistoryPageSize = 8;
+
+internal class MyHistoryProvider : ChatElementListener {
 
     internal var accountId: String? = null
     private val historySync = Any() // in use to block multi access to history from different actions.
@@ -31,8 +28,8 @@ internal class MyHistoryProvider : HistoryProvider {
     private val chatHistory = ConcurrentHashMap<String, List<HistoryElement>>()
     private var hasHistory = false
 
-    // Fetching history elements
-    override fun fetch(from: Int, @FetchDirection direction: Int, listener: HistoryListener?) {
+
+    override fun onFetch(from: Int, direction: Int, callback: HistoryCallback?) {
 
         Thread(Runnable {
             val history: List<StorableChatElement>
@@ -53,14 +50,13 @@ internal class MyHistoryProvider : HistoryProvider {
                 handler.post {
                     Log.d("History", "passing history list to listener, from = " + from + ", size = " + history.size)
                     hasHistory = history.isNotEmpty()
-                    listener!!.onReady(from, direction, history)
+                    callback?.onReady(from, direction, history)
                 }
             }
         }).start()
     }
 
-    // Stores elements in the history
-    override fun store(item: StorableChatElement) {
+    override fun onReceive(item: StorableChatElement) {
        // if(item == null || item.getStatus() != StatusOk) return;
 
         synchronized(historySync) {
@@ -71,8 +67,7 @@ internal class MyHistoryProvider : HistoryProvider {
         }
     }
 
-    // Removes elements from the history
-    override fun remove(timestampId: Long) {
+    override fun onRemove(timestampId: Long) {
         synchronized(historySync) {
             accountId?.run {
                 val convHistory = getAccountHistory(this)
@@ -89,8 +84,7 @@ internal class MyHistoryProvider : HistoryProvider {
         }
     }
 
-    // Updates a specific history item by its timestamp
-    override fun update(timestampId: Long, item: StorableChatElement) {
+    override fun onUpdate(timestampId: Long, item: StorableChatElement) {
         synchronized(historySync) {
             accountId?.run {
                 val convHistory = getAccountHistory(this)
@@ -120,7 +114,7 @@ internal class MyHistoryProvider : HistoryProvider {
 
         val accountChatHistory = chatHistory[account] ?: return ArrayList<HistoryElement>()
 
-        val fetchOlder = direction == HistoryProvider.Older
+        val fetchOlder = direction == HistoryFetching.Older
 
         // to prevent Concurrent exception
         val accountHistory = CopyOnWriteArrayList<HistoryElement>(accountChatHistory)

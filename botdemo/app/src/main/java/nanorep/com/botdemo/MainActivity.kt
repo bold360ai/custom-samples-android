@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.support.annotation.StringDef
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -23,7 +24,7 @@ import com.nanorep.convesationui.structure.controller.ChatLoadResponse
 import com.nanorep.convesationui.structure.controller.ChatLoadedListener
 import com.nanorep.nanoengine.Account
 import com.nanorep.nanoengine.AccountInfo
-import com.nanorep.nanoengine.BotAccount
+import com.nanorep.nanoengine.bot.BotAccount
 import com.nanorep.nanoengine.model.configuration.ConversationSettings
 import com.nanorep.nanoengine.model.configuration.TimestampStyle
 import com.nanorep.sdkcore.model.StatementScope
@@ -31,14 +32,16 @@ import com.nanorep.sdkcore.utils.NRError
 import com.nanorep.sdkcore.utils.snack
 import com.nanorep.sdkcore.utils.toast
 import kotlinx.android.synthetic.main.activity_main.*
-import nanorep.com.botdemo.fragments.DemoMainFragment
+import nanorep.com.botdemo.ChatHandler.Companion.ConfiguredAccent
+import nanorep.com.botdemo.ChatHandler.Companion.ReadOutEnabled
+import nanorep.com.botdemo.fragments.*
 import nanorep.com.botdemo.fragments.DemoMainFragment_TAG
-import nanorep.com.botdemo.fragments.DummyInAppFragment
 import nanorep.com.botdemo.fragments.DummyInAppFragment_TAG
 import nanorep.com.botdemo.handlers.MyHandoverHandler
 import nanorep.com.botdemo.providers.MyAccountProvider
 import nanorep.com.botdemo.providers.MyEntitiesProvider
 import nanorep.com.botdemo.providers.MyHistoryProvider
+import java.util.*
 
 
 /***
@@ -48,8 +51,18 @@ import nanorep.com.botdemo.providers.MyHistoryProvider
 
 // An interface that is being used to control the view when the has been selected and created at the DemoMainFragment
 interface ChatHandler : ChatEventListener {
+
+    companion object {
+        @Retention(AnnotationRetention.SOURCE)
+        @StringDef(ConfiguredAccent, ReadOutEnabled)
+        annotation class SettingsType
+        
+        const val ConfiguredAccent = "Accent"
+        const val ReadOutEnabled = "readOutEnabled"
+    }
+
     fun progressbarVisibility(visible: Boolean)
-    fun onAccountReady(account: Account)
+    fun onAccountReady(account: Account, settings: MutableMap<String, Any>)
 }
 
 class MainActivity : AppCompatActivity(), ChatHandler {
@@ -61,6 +74,9 @@ class MainActivity : AppCompatActivity(), ChatHandler {
     private var entitiesProvider = MyEntitiesProvider()
     private var historyProvider = MyHistoryProvider()
     private var menu: Menu? = null
+
+    private lateinit var accent: Locale
+    private var readoutEnabled = false
 
 
     // Handlers to be passed to the chatController
@@ -74,7 +90,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         setSupportActionBar(findViewById(R.id.toolbar))
 
         supportFragmentManager.beginTransaction()
-                .replace(R.id.content_main, DemoMainFragment.newInstance(),
+                .add(R.id.content_main, DemoMainFragment.newInstance(),
                         DemoMainFragment_TAG
                 )
                 .commit()
@@ -111,10 +127,10 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         super.onDestroy()
     }
 
-    override fun onAccountReady(account: Account) {
+    override fun onAccountReady(account: Account, settings: MutableMap<String, Any>) {
         progressbarVisibility(true)
 
-        accountProvider.updateAccountInfo(account)
+        accountProvider.update(account)
 
         // Register to the account's MissingEntities
         (account as? BotAccount)?.entities = arrayOf("CREDIT_CARD", "USER_ACCOUNTS", "ACCOUNT_OPTIONS")
@@ -124,12 +140,15 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
         if (isFinishing) return
 
+        settings[ConfiguredAccent]?.let { accent = it as Locale }
+        settings[ReadOutEnabled]?.let { readoutEnabled = it as Boolean }
+
         chatController = createChat(account)
 
     }
 
     override fun onAccountUpdate(accountInfo: AccountInfo) {
-        accountProvider.updateAccountInfo(accountInfo)
+        accountProvider.update(accountInfo)
     }
 
     /**
@@ -139,23 +158,25 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         if (isFinishing) return null
 
         val settings = ConversationSettings()
-                .speechEnable(true)
-                .enableMultiRequestsOnLiveAgent(true)
-                .timestampConfig(
-                        true, TimestampStyle(
-                        "dd.MM hh:mm:ss",
-                        10, Color.parseColor("#33aa33"), null
+            .speechEnable(true)
+            .enableMultiRequestsOnLiveAgent(true)
+            .timestampConfig(
+                    true, TimestampStyle(
+                    "dd.MM hh:mm:ss",
+                    10, Color.parseColor("#33aa33"), null
                 )
-                )
-                .datestamp(true, FriendlyDatestampFormatFactory(this))
+            )
+            .datestamp(true, FriendlyDatestampFormatFactory(this))
+
+        if (readoutEnabled) {
+            settings.enableReadOut()
+        }
 
         return ChatController.Builder(this).apply {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
             chatHandoverHandler(myHandoverHandler);
-            entitiesProvider(entitiesProvider)
-            accountProvider.run { accountProvider(this) }
-            historyProvider.run { historyProvider(this) }
+            entitiesProvider(entitiesProvider).apply {  }
         }
                 .build(account, object : ChatLoadedListener {
 
@@ -194,6 +215,8 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             }
 
             StateEvent.Started -> {
+
+                chatController?.configuration?.ttsConfig?.language = accent
                 if (stateEvent.scope == StatementScope.HandoverScope) {
                     menu?.findItem(R.id.end_chat)?.isVisible = true
                 }

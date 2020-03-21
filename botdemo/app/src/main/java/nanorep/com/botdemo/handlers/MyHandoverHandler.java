@@ -4,52 +4,54 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
+import com.integration.core.ErrorEvent;
 import com.integration.core.MessageEvent;
 import com.integration.core.StateEvent;
 import com.integration.core.UserEvent;
 import com.nanorep.convesationui.structure.HandoverHandler;
+import com.nanorep.convesationui.structure.UiConfigurations;
 import com.nanorep.convesationui.structure.components.ComponentType;
 import com.nanorep.convesationui.structure.handlers.ChatDelegate;
+import com.nanorep.convesationui.views.autocomplete.ChatInputData;
 import com.nanorep.nanoengine.AccountInfo;
+import com.nanorep.nanoengine.model.configuration.ChatFeatures;
 import com.nanorep.nanoengine.model.conversation.statement.IncomingStatement;
+import com.nanorep.nanoengine.model.conversation.statement.OutgoingStatement;
+import com.nanorep.nanoengine.model.conversation.statement.UserInput;
 import com.nanorep.sdkcore.model.ChatStatement;
-import com.nanorep.sdkcore.model.SystemStatement;
 import com.nanorep.sdkcore.utils.Event;
-import com.nanorep.sdkcore.utils.EventListener;
 import com.nanorep.sdkcore.utils.NRError;
+import com.nanorep.sdkcore.utils.SystemUtil;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
 
 import static com.integration.core.EventsKt.Error;
 import static com.integration.core.EventsKt.Message;
+import static com.integration.core.EventsKt.State;
 import static com.integration.core.EventsKt.UserAction;
 import static com.integration.core.StateEvent.Ended;
+import static com.integration.core.StateEvent.Resumed;
 import static com.integration.core.StateEvent.Started;
 import static com.integration.core.UserEvent.ActionLink;
+import static com.nanorep.nanoengine.model.conversation.SessionInfoKt.getProviderConfig;
 import static com.nanorep.sdkcore.model.StatementModels.StatusOk;
 import static com.nanorep.sdkcore.model.StatementModels.StatusPending;
-import static com.nanorep.sdkcore.utils.UtilityMethodsKt.runMain;
+import static com.nanorep.sdkcore.utils.UtilityMethodsKt.getAs;
 
 public class MyHandoverHandler extends HandoverHandler {
 
     private static int responseNumber = 1;
 
     private String handlerConfiguration;
-    private EventListener listener;
-    private ChatDelegate chatDelegate;
     private Handler handler = new Handler();
-    ;
 
     public MyHandoverHandler(@NotNull Context context) {
         super(context);
-    }
-
-    @Override
-    public void setListener(@Nullable EventListener listener) {
-        this.listener = listener;
     }
 
     @Override
@@ -60,49 +62,29 @@ public class MyHandoverHandler extends HandoverHandler {
                 if (event instanceof UserEvent) {
                     UserEvent userEvent = (UserEvent) event;
                     if (userEvent.getAction().equals(ActionLink)) {
-                        listener.handleEvent(userEvent.getType(), userEvent);
+                        passEvent(userEvent);
                     }
                 }
                 break;
 
             case Message:
+                ChatStatement statement = getAs(event.getData());
+                if (statement != null) {
+                    injectElement(statement);
+                }
+                break;
 
-                runMain(event, event1 -> {
-                    if (event.getData() instanceof IncomingStatement) {
-                        chatDelegate.injectIncoming((IncomingStatement) event.getData());
-                    }
-                    return null;
-                });
+            case State:
+                handleState(getAs(event));
                 break;
 
             case Error:
-                runMain(event, event1 -> {
-
-                    ChatStatement request = null;
-
-                    try {
-                        request = (ChatStatement) event1.getData();
-                    } catch (ClassCastException exp) {
-                        NRError error = (NRError) event1.getData();
-                        if (error != null) {
-                            request = ((ChatStatement) error.getData());
-                        }
-                        Log.e("ClassCastException", "ClassCastException");
-                    }
-
-                    if (request != null) {
-                        chatDelegate.updateStatus(request.getTimestamp(), StatusPending);
-                    }
-
-                    chatDelegate.enableCmp(ComponentType.UserInputCmp, true, null);
-
-                    return null;
-                });
+                handleError(event);
                 break;
 
             default:
-               listener.handleEvent(event.getType(), event);
-               break;
+                passEvent(event);
+                break;
         }
 
         // If there is any post event function, invoke it after the event handling
@@ -112,57 +94,110 @@ public class MyHandoverHandler extends HandoverHandler {
         }
     }
 
+    private void handleError(@NotNull Event event) {
+        if (event instanceof ErrorEvent) {
+            ErrorEvent errorEvent = (ErrorEvent) event;
+
+            if (errorEvent.getCode().equals(NRError.StatementError)) {
+                ChatStatement request = getAs(errorEvent.getData());
+                if (request == null) {
+                    NRError error = getAs(errorEvent.getData());
+                    if (error != null) {
+                        request = getAs(error.getData());
+                    }
+                }
+
+                if (request != null) {
+                    updateStatus(request, StatusPending);
+                }
+            }
+        }
+
+        passEvent(event);
+    }
+
+    @Override
+    protected void enableChatInput(boolean enable, @Nullable ChatInputData cmpData) {
+        cmpData = new ChatInputData();
+        cmpData.setOnSendInput(enable ? (Function1<UserInput, Unit>) userInput -> {
+            post(new OutgoingStatement(userInput.getText(), SystemUtil.INSTANCE.syncedCurrentTimeMillis(),
+                    getScope(), userInput.getInputSource()));
+            return null;
+        } : null);
+
+        cmpData.setVoiceEnabled(enable && UiConfigurations.FeaturesDefaults.isEnabled(ChatFeatures.SpeechRecognition));
+        cmpData.setInputEnabled(enable);
+
+        super.enableChatInput(enable, cmpData);
+    }
+
     @Override
     public void startChat(@Nullable AccountInfo accountInfo) {
 
-        chatDelegate = getChatDelegate();
+        this.enableChatInput(true, null);
 
         if (accountInfo != null) {
-            byte[] bytes = accountInfo.getInfo();
-            handlerConfiguration = new String(bytes);
+            handlerConfiguration = getProviderConfig(accountInfo.getInfo());
         }
 
-       handleState(new StateEvent(Started, getScope()));
+        handleEvent(State, new StateEvent(Started, getScope()));
+
+        setChatStarted(true);
     }
 
     @Override
     public void endChat(boolean forceClose) {
-        handleState(new StateEvent(Ended, getScope()));
+        handleEvent(State, new StateEvent(Ended, getScope()));
+
+        enableChatInput(false, null);
+
+        setChatStarted(false);
     }
 
     @Override
-    public void post(@NotNull ChatStatement message){
-        chatDelegate.injectOutgoing(message);
-        chatDelegate.updateStatus(message.getTimestamp(), StatusOk); // can be delayed by the handover provider
-
+    public void post(@NotNull ChatStatement message) {
+        injectElement(message);
+        updateStatus(message, StatusOk);
         simulateAgentResponse(message.getText());
     }
 
-    private void handleState(StateEvent stateEvent) {
+    @Override
+    protected void handleState(StateEvent event) {
 
-        switch (stateEvent.getState()) {
+        switch (event.getState()) {
             case Started:
-                Log.e("MainFragment","started handover" );
-                runMain(stateEvent, stateEvent1 -> {
-                    chatDelegate.injectSystem(new SystemStatement("Started Chat with Handover provider, the handover data is: " + handlerConfiguration, getScope()));
-                    chatDelegate.injectIncoming(new IncomingStatement("Hi from handover", getScope()));
-                    return null;
-                });
+                Log.e("MainFragment", "started handover");
+
+                injectSystemMessage("Started Chat with Handover provider, the handover data is: " + handlerConfiguration);
+                injectElement(new IncomingStatement("Hi from handover", getScope()));
+
+                passStateEvent(event);
                 break;
 
             case Ended:
-                Log.e("MainFragment","handover ended" );
-                runMain(stateEvent, stateEvent1 -> {
-                    chatDelegate.injectIncoming(new IncomingStatement("bye from handover", getScope()));
-                    chatDelegate.injectSystem(new SystemStatement("Ended Chat with the Handover provider", getScope()));
-                    return null;
-                });
+                Log.e("MainFragment", "handover ended");
+
+                injectElement(new IncomingStatement("bye from handover", getScope()));
+                injectSystemMessage("Ended Chat with the Handover provider");
+
+                passStateEvent(event);
                 break;
+
+            case Resumed:
+                onResume();
+                break;
+
+            default:
+                super.handleState(event);
         }
 
-        handleEvent(stateEvent.getType(), stateEvent);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        enableChatInput(true, null);
+    }
 
     /***
      * A function used to simulate agent typing indication
@@ -191,7 +226,18 @@ public class MyHandoverHandler extends HandoverHandler {
     }
 
     private void presentTypingIndication(boolean isTyping) {
-        // In order to use the apps custom typing indication use: listener.handleEvent(Track, new TrackingEvent(TrackingEvent.OperatorTyping, getScope(), isTyping));
-        chatDelegate.enableCmp(ComponentType.LiveTypingCmp, isTyping, null);
+        /* -> In order to use the apps custom typing indication use:
+            listener.handleEvent(Operator, new OperatorEvent(OperatorEvent.OperatorTyping, getScope(), isTyping));
+         */
+
+        Log.d("handover", "event: operatorTyping: " + isTyping);
+        ChatDelegate chatDelegate = getChatDelegate();
+        if (chatDelegate == null) return;
+
+        if (isTyping) {
+            chatDelegate.updateCmp(ComponentType.LiveTypingCmp, null);
+        } else {
+            chatDelegate.removeCmp(ComponentType.LiveTypingCmp, true);
+        }
     }
 }

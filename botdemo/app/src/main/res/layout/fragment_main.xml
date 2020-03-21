@@ -1,9 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools" android:gravity="center"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_gravity="center"
-              android:orientation="vertical">
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="20dp">
 
     <android.support.v7.widget.AppCompatTextView
             android:id="@+id/start_logged_in"
@@ -21,6 +22,30 @@
             android:text="@string/not_logged_in_user_button"
             android:drawableStart="@drawable/bold_360"
             android:drawablePadding="10dp"
-            style="@style/main_button"/>
+            style="@style/main_button"
+            android:layout_marginBottom="100dp"/>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            style="@style/settingsSection">
+
+        <CheckBox
+                android:id="@+id/readoutCheckBox"
+                android:text="@string/enable_read_out"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textSize= "16sp"
+                android:layout_marginBottom="20dp" />
+
+        <Spinner
+                android:id="@+id/accentSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="wrap_content" />
+
+    </LinearLayout>
 
 </LinearLayout>

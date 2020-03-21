@@ -6,6 +6,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:dropDownListViewStyle">@style/demoDropDown</item>
+
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -19,13 +21,14 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 
-    <!--    <style name="DemoSubmitButton" parent="Theme.AppCompat.Light">
-        <item name="android:background">@color/colorPrimary</item>
-        <item name="android:textColor">#fffefe</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:padding">10dp</item>
-        <item name="android:layout_marginRight">8dp</item>
-        <item name="android:layout_marginLeft">8dp</item>
-    </style>-->
+    <style name="demoDropDown" parent="Widget.AppCompat.Light.ListView.DropDown">
+        <item name="android:dividerHeight">10dip</item>
+        <item name="android:divider">@drawable/persistent_divider</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <style name="settingsSection" parent="main_button">
+        <item name="android:background">@drawable/settings_background</item>
+    </style>
 
 </resources>

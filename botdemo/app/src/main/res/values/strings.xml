@@ -4,11 +4,14 @@
     <string name="api_key">37a4b6ea-ba69-4644-a465-89e1bcc4e9d2</string>
     <string name="account">ICICI</string>
     <string name="knowledge_base">iMobile</string>
-    <string name="domain">qa07</string>
+    <string name="domain"></string>
 
     <string name="back_to_the_bold_sdk">back to the bold SDK</string>
     <string name="in_app_fragment_text">This is an In-App Navigation Demo</string>
     <string name="not_logged_in_user_button">Not logged In User</string>
     <string name="loggedin_user_button">LoggedIn User</string>
+    <string name="apply_hindi_accent">Hindi - India accent</string>
+    <string name="apply_hindi_Bengali_accent">Hindi - Bengali accent</string>
+    <string name="enable_read_out">Enable read out</string>
 
 </resources>
