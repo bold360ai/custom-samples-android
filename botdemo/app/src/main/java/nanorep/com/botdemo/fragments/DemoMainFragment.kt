@@ -147,10 +147,8 @@ class DemoMainFragment : Fragment() {
 
                 textSize = 14f
 
-                text = if (position == 0) {
-                    ""
-                } else {
-                    list[position].title
+                if (position > 0) {
+                    text = list[position].title
                 }
 
                 setPadding(10, 10, 0, 10)

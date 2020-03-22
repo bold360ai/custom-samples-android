@@ -1,13 +1,18 @@
 package nanorep.com.botdemo
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.StringDef
+import android.support.v4.app.ActivityCompat
+import android.support.v4.app.ActivityCompat.*
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -89,11 +94,43 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        supportFragmentManager.beginTransaction()
-                .add(R.id.content_main, DemoMainFragment.newInstance(),
-                        DemoMainFragment_TAG
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    DEMO_PERMISSIONS_REQUEST_CODE
                 )
-                .commit()
+
+            } else {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.content_main, DemoMainFragment.newInstance(),
+                        DemoMainFragment_TAG
+                    )
+                    .commit()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == DEMO_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.content_main, DemoMainFragment.newInstance(),
+                        DemoMainFragment_TAG
+                    )
+                    .commit()
+            } else {
+                toast(this,  "Permissions are mandatory for the Demo")
+                finish()
+            }
+        }
     }
 
     ///////////////////////////////////////////// Lifecycle and backPressed handling:
@@ -158,7 +195,6 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         if (isFinishing) return null
 
         val settings = ConversationSettings()
-            .speechEnable(true)
             .enableMultiRequestsOnLiveAgent(true)
             .timestampConfig(
                     true, TimestampStyle(
@@ -381,6 +417,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
     companion object {
         const val CONVERSATION_FRAGMENT_TAG = "conversation_fragment"
+        const val DEMO_PERMISSIONS_REQUEST_CODE = 111
     }
 
     private fun hideKeyboard() {
