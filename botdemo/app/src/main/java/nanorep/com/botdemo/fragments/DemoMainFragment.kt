@@ -123,11 +123,7 @@ class DemoMainFragment : Fragment() {
             return position.toLong()
         }
 
-        override fun getView(
-            position: Int,
-            convertView: View?,
-            parent: ViewGroup?
-        ): View? {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             return TextView(context).apply {
 
                 textSize = 16f

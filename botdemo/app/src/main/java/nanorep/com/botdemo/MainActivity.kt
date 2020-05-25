@@ -11,8 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.StringDef
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.ActivityCompat.*
+import android.support.v4.app.ActivityCompat.checkSelfPermission
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -23,6 +22,8 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.integration.core.StateEvent
 import com.nanorep.convesationui.structure.FriendlyDatestampFormatFactory
+import com.nanorep.convesationui.structure.components.ReadRequest
+import com.nanorep.convesationui.structure.components.TTSReadAlterProvider
 import com.nanorep.convesationui.structure.controller.ChatController
 import com.nanorep.convesationui.structure.controller.ChatEventListener
 import com.nanorep.convesationui.structure.controller.ChatLoadResponse
@@ -32,6 +33,8 @@ import com.nanorep.nanoengine.AccountInfo
 import com.nanorep.nanoengine.bot.BotAccount
 import com.nanorep.nanoengine.model.configuration.ConversationSettings
 import com.nanorep.nanoengine.model.configuration.TimestampStyle
+import com.nanorep.nanoengine.model.configuration.VoiceSettings
+import com.nanorep.nanoengine.model.configuration.VoiceSupport
 import com.nanorep.sdkcore.model.StatementScope
 import com.nanorep.sdkcore.utils.NRError
 import com.nanorep.sdkcore.utils.snack
@@ -39,8 +42,9 @@ import com.nanorep.sdkcore.utils.toast
 import kotlinx.android.synthetic.main.activity_main.*
 import nanorep.com.botdemo.ChatHandler.Companion.ConfiguredAccent
 import nanorep.com.botdemo.ChatHandler.Companion.ReadOutEnabled
-import nanorep.com.botdemo.fragments.*
+import nanorep.com.botdemo.fragments.DemoMainFragment
 import nanorep.com.botdemo.fragments.DemoMainFragment_TAG
+import nanorep.com.botdemo.fragments.DummyInAppFragment
 import nanorep.com.botdemo.fragments.DummyInAppFragment_TAG
 import nanorep.com.botdemo.handlers.MyHandoverHandler
 import nanorep.com.botdemo.providers.MyAccountProvider
@@ -109,6 +113,12 @@ class MainActivity : AppCompatActivity(), ChatHandler {
                     )
                     .commit()
             }
+        } else {
+            supportFragmentManager.beginTransaction()
+                    .add(R.id.content_main, DemoMainFragment.newInstance(),
+                            DemoMainFragment_TAG
+                    )
+                    .commit()
         }
     }
 
@@ -204,15 +214,21 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             )
             .datestamp(true, FriendlyDatestampFormatFactory(this))
 
-        if (readoutEnabled) {
-            settings.enableReadOut()
-        }
-
         return ChatController.Builder(this).apply {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
             chatHandoverHandler(myHandoverHandler);
             entitiesProvider(entitiesProvider).apply {  }
+            if (readoutEnabled) {
+
+                settings.voiceSettings(VoiceSettings(VoiceSupport.VoiceToVoice))
+                ttsReadAlterProvider(object : TTSReadAlterProvider{
+                    override fun alter(readRequest: ReadRequest, callback: (ReadRequest) -> Unit) {
+                        readRequest.text = readRequest.text.replace("ICICI Bank", "I C I C I Bank")
+                        callback.invoke(readRequest)
+                    }
+                })
+            }
         }
                 .build(account, object : ChatLoadedListener {
 
