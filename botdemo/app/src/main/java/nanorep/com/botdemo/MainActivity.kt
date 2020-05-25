@@ -198,6 +198,13 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         accountProvider.update(accountInfo)
     }
 
+    class TTSAlterProvider: TTSReadAlterProvider {
+        override fun alter(readRequest: ReadRequest, callback: (ReadRequest) -> Unit) {
+            readRequest.text = readRequest.text.replace("ICICI Bank", "I C I C I Bank")
+            callback.invoke(readRequest)
+        }
+    }
+
     /**
      * Initializes the chat controller with the providers and opens the main fragment
      */
@@ -220,14 +227,8 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             chatHandoverHandler(handoverHandler);
             entitiesProvider(entitiesProvider)
             if (readoutEnabled) {
-
                 settings.voiceSettings(VoiceSettings(VoiceSupport.VoiceToVoice))
-                ttsReadAlterProvider(object : TTSReadAlterProvider{
-                    override fun alter(readRequest: ReadRequest, callback: (ReadRequest) -> Unit) {
-                        readRequest.text = readRequest.text.replace("ICICI Bank", "I C I C I Bank")
-                        callback.invoke(readRequest)
-                    }
-                })
+                ttsReadAlterProvider(TTSAlterProvider())
             }
         }
                 .build(account, object : ChatLoadedListener {

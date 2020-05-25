@@ -80,11 +80,11 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation ("$coreRepoPath:sdkcore:3.6.1.rc1"){changing = true}
-    implementation ("$repoPath:engine:3.6.1.rc1"){changing = true}
-    implementation ("$repoPath:chatintegration:3.6.1.rc1"){changing = true}
-    implementation ("$repoPath:ui:3.6.1.rc4"){changing = true}
-    implementation ("$coreRepoPath:accessibility:3.6.1.rc1"){changing = true}
+    implementation ("$coreRepoPath:sdkcore:3.6.1.rc1")
+    implementation ("$repoPath:engine:3.6.1.rc1")
+    implementation ("$repoPath:chatintegration:3.6.1.rc1")
+    implementation ("$repoPath:ui:3.6.1.rc4")
+    implementation ("$coreRepoPath:accessibility:3.6.1.rc1")
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72"
 
