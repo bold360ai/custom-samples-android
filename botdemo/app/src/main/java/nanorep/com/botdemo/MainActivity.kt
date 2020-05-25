@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
 
     // Handlers to be passed to the chatController
-    private val myHandoverHandler = MyHandoverHandler(this)
+    private val handoverHandler = MyHandoverHandler(this)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,8 +217,8 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         return ChatController.Builder(this).apply {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
-            chatHandoverHandler(myHandoverHandler);
-            entitiesProvider(entitiesProvider).apply {  }
+            chatHandoverHandler(handoverHandler);
+            entitiesProvider(entitiesProvider)
             if (readoutEnabled) {
 
                 settings.voiceSettings(VoiceSettings(VoiceSupport.VoiceToVoice))
