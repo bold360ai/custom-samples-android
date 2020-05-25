@@ -224,7 +224,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         return ChatController.Builder(this).apply {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
-            chatHandoverHandler(handoverHandler);
+            chatHandoverHandler(handoverHandler)
             entitiesProvider(entitiesProvider)
             if (readoutEnabled) {
                 settings.voiceSettings(VoiceSettings(VoiceSupport.VoiceToVoice))
