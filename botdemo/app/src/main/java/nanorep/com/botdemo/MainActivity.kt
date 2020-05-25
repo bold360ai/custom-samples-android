@@ -229,6 +229,8 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             if (readoutEnabled) {
                 settings.voiceSettings(VoiceSettings(VoiceSupport.VoiceToVoice))
                 ttsReadAlterProvider(TTSAlterProvider())
+            } else {
+                settings.voiceSettings(VoiceSettings(VoiceSupport.SpeechRecognition))
             }
         }
                 .build(account, object : ChatLoadedListener {
