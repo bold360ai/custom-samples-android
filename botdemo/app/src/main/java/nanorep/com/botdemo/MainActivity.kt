@@ -10,11 +10,11 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.StringDef
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.ActivityCompat.*
-import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.StringDef
+import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.*
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.Gravity
 import android.view.Menu
@@ -23,6 +23,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.integration.core.StateEvent
 import com.nanorep.convesationui.structure.FriendlyDatestampFormatFactory
+import com.nanorep.convesationui.structure.HandoverHandler
 import com.nanorep.convesationui.structure.controller.ChatController
 import com.nanorep.convesationui.structure.controller.ChatEventListener
 import com.nanorep.convesationui.structure.controller.ChatLoadResponse
@@ -32,6 +33,8 @@ import com.nanorep.nanoengine.AccountInfo
 import com.nanorep.nanoengine.bot.BotAccount
 import com.nanorep.nanoengine.model.configuration.ConversationSettings
 import com.nanorep.nanoengine.model.configuration.TimestampStyle
+import com.nanorep.nanoengine.model.configuration.VoiceSettings
+import com.nanorep.nanoengine.model.configuration.VoiceSupport
 import com.nanorep.sdkcore.model.StatementScope
 import com.nanorep.sdkcore.utils.NRError
 import com.nanorep.sdkcore.utils.snack
@@ -83,33 +86,30 @@ class MainActivity : AppCompatActivity(), ChatHandler {
     private lateinit var accent: Locale
     private var readoutEnabled = false
 
-
-    // Handlers to be passed to the chatController
-    private val myHandoverHandler = MyHandoverHandler(this)
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
 
                 requestPermissions(
                     arrayOf(Manifest.permission.RECORD_AUDIO),
                     DEMO_PERMISSIONS_REQUEST_CODE
                 )
-
-            } else {
-                supportFragmentManager.beginTransaction()
-                    .add(R.id.content_main, DemoMainFragment.newInstance(),
-                        DemoMainFragment_TAG
-                    )
-                    .commit()
-            }
+        } else {
+            openChatFragment()
         }
+    }
+
+    private fun openChatFragment() {
+        supportFragmentManager.beginTransaction()
+                .add(R.id.content_main, DemoMainFragment.newInstance(),
+                        DemoMainFragment_TAG
+                )
+                .commit()
     }
 
     override fun onRequestPermissionsResult(
@@ -121,11 +121,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
         if (requestCode == DEMO_PERMISSIONS_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                supportFragmentManager.beginTransaction()
-                    .add(R.id.content_main, DemoMainFragment.newInstance(),
-                        DemoMainFragment_TAG
-                    )
-                    .commit()
+               openChatFragment()
             } else {
                 toast(this,  "Permissions are mandatory for the Demo")
                 finish()
@@ -205,13 +201,13 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             .datestamp(true, FriendlyDatestampFormatFactory(this))
 
         if (readoutEnabled) {
-            settings.enableReadOut()
+            settings.voiceSettings(VoiceSettings(VoiceSupport.VoiceToVoice))
         }
 
         return ChatController.Builder(this).apply {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
-            chatHandoverHandler(myHandoverHandler);
+            chatHandoverHandler(MyHandoverHandler(this@MainActivity));
             entitiesProvider(entitiesProvider).apply {  }
         }
                 .build(account, object : ChatLoadedListener {
@@ -422,7 +418,7 @@ class MainActivity : AppCompatActivity(), ChatHandler {
 
     private fun hideKeyboard() {
         (getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager)?.takeIf { currentFocus != null }?.run {
-            hideSoftInputFromWindow(currentFocus.windowToken, 0)
+            hideSoftInputFromWindow(currentFocus?.windowToken, 0)
         }
     }
 
