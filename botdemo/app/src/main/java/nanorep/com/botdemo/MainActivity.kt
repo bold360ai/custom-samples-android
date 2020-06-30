@@ -24,6 +24,8 @@ import android.view.inputmethod.InputMethodManager
 import com.integration.core.StateEvent
 import com.nanorep.convesationui.structure.FriendlyDatestampFormatFactory
 import com.nanorep.convesationui.structure.HandoverHandler
+import com.nanorep.convesationui.structure.components.ReadRequest
+import com.nanorep.convesationui.structure.components.TTSReadAlterProvider
 import com.nanorep.convesationui.structure.controller.ChatController
 import com.nanorep.convesationui.structure.controller.ChatEventListener
 import com.nanorep.convesationui.structure.controller.ChatLoadResponse
@@ -184,6 +186,13 @@ class MainActivity : AppCompatActivity(), ChatHandler {
         accountProvider.update(accountInfo)
     }
 
+    class TTSAlterProvider: TTSReadAlterProvider {
+        override fun alter(readRequest: ReadRequest, callback: (ReadRequest) -> Unit) {
+            readRequest.readoutResult = readRequest.readoutResult?.replace("ICICI Bank", "I C I C I Bank")
+            callback.invoke(readRequest)
+        }
+    }
+
     /**
      * Initializes the chat controller with the providers and opens the main fragment
      */
@@ -208,7 +217,8 @@ class MainActivity : AppCompatActivity(), ChatHandler {
             conversationSettings(settings)
             chatEventListener(this@MainActivity)
             chatHandoverHandler(MyHandoverHandler(this@MainActivity));
-            entitiesProvider(entitiesProvider).apply {  }
+            ttsReadAlterProvider(TTSAlterProvider())
+            entitiesProvider(entitiesProvider)
         }
                 .build(account, object : ChatLoadedListener {
 
