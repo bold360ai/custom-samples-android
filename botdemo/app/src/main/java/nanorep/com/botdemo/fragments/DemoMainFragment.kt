@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.service.chooser.ChooserTarget
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -25,7 +25,7 @@ import java.util.*
 
 internal const val DemoMainFragment_TAG = "DemoMainFragment"
 
-class DemoMainFragment : Fragment() {
+class DemoMainFragment : androidx.fragment.app.Fragment() {
 
     private var chatHandler: ChatHandler? = null
     private lateinit var selectedAccent: Accent

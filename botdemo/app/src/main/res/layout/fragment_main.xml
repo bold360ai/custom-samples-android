@@ -6,7 +6,7 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-    <android.support.v7.widget.AppCompatTextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/start_logged_in"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -15,7 +15,7 @@
             style="@style/main_button"
             android:layout_marginBottom="15dp"/>
 
-    <android.support.v7.widget.AppCompatTextView
+    <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/start_not_logged_in"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -36,7 +36,6 @@
                 android:text="@string/enable_read_out"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
                 android:textSize= "16sp"
                 android:layout_marginBottom="20dp" />
 
